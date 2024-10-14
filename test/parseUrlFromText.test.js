@@ -37,6 +37,7 @@ test('parseUrlFromText should return empty array for text that has url outside s
   ["url [ www.google.com ]", 'www.google.com'],
   ["url [ google.com ]", 'google.com'],
   ["url ] []] [ google.com ]", 'google.com'],
+  ["url ] []] [ google.com?test=query&string=1 ]", 'google.com?test=query&string=1'],
   ["url with [ extra text www.example.com inside brackets ]", 'www.example.com'],
   ["multiple urls [bla www.first.com more text www.second.com other stuff]", 'www.second.com'],
   ["multiple levels[ www.first.com www.second.com]", 'www.second.com'],
