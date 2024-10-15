@@ -38,6 +38,10 @@ test("parseUrlFromText should return empty array for text that has url outside s
 [
 	["url [ www.google.com ]", "www.google.com"],
 	["url [ google.com ]", "google.com"],
+	[
+		"url [ https://en.m.wikipedia.org/wiki/Main_Page ]",
+		"https://en.m.wikipedia.org/wiki/Main_Page",
+	],
 	["url ] []] [ google.com ]", "google.com"],
 	[
 		"url ] []] [ google.com?test=query&string=1 ]",
