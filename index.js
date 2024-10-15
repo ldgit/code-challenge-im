@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 
-import * as fs from 'node:fs';
-import readline from 'node:readline';
-import { parseUrlFromText } from './src/parseUrlFromText.js';
+import * as fs from "node:fs";
+import readline from "node:readline";
+import { parseUrlFromText } from "./src/parseUrlFromText.js";
+import { createCallQueue } from "./src/callQueue.js";
 
 const fileToParse = process.argv[2];
-
-let stream = typeof fileToParse === 'undefined' ? process.stdin : fs.createReadStream(fileToParse);
+let stream =
+	typeof fileToParse === "undefined"
+		? process.stdin
+		: fs.createReadStream(fileToParse);
 const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
-rl.on('line', (line) => {
-  const urls = parseUrlFromText(line);
-  console.log(urls);
-})
+const callQueue = createCallQueue();
+rl.on("line", (line) => {
+	const urls = parseUrlFromText(line);
 
-rl.on('close', () => {
-  process.exit(0);
-})
+	urls.forEach((url) => {
+		callQueue.add(url);
+	});
+});
