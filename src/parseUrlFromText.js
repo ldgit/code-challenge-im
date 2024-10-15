@@ -47,7 +47,7 @@ export function parseUrlFromText(text) {
 
   const urls = [];
   findBracketPairs(textWithoutEscapedBrackets).forEach((bracketPair) => {
-    const urlRegex = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+    const urlRegex = /[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi;
     const urlsInBracketPair = textWithoutEscapedBrackets.substring(bracketPair[0], bracketPair[1]).match(urlRegex);
     if (urlsInBracketPair !== null) {
       urls.push(urlsInBracketPair[urlsInBracketPair.length - 1]);
