@@ -11,4 +11,6 @@ export async function fetchUrlData(url) {
 	if (response.status >= 400 && response.status < 600) {
 		throw new Error();
 	}
+
+  return await response.text();
 }

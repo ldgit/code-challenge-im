@@ -27,4 +27,16 @@ describe("fetchUrlData", () => {
 			).rejects.toThrowError();
 		});
 	});
+
+	test("fetchUrlData should return http response body", async () => {
+		server.use(
+			http.get("https://www.example.com", () => {
+				return HttpResponse.html("<html><head</head><body></body></html>");
+			}),
+		);
+
+		expect(await fetchUrlData("https://www.example.com")).toEqual(
+			"<html><head</head><body></body></html>",
+		);
+	});
 });
