@@ -169,12 +169,47 @@ describe("callQueue", () => {
 		expect(urlCallCount).toEqual(1);
 	});
 
-	test("if a call fails, wait specified amount of time and retry (nonexistent website)", async () => {
+	[
+		"Fetch failed with network error.",
+		"Fetch failed with http error code 502",
+	].forEach((errorMessages) => {
+		test(`if a call fails, wait specified amount of time and retry (${errorMessages})`, async () => {
+			let fetchUrlDataSpy = vi
+				.fn()
+				.mockRejectedValueOnce(new Error("Fetch failed with network error."))
+				.mockResolvedValue("");
+			const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy });
+
+			queue.add("https://www.nonexistentexamplewebsite.com");
+
+			expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+			expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+				"https://www.nonexistentexamplewebsite.com",
+			);
+			// Wait a bit so the initial fetch request fails.
+			// Wait until just before the retry attempt.
+			await advanceTime(59998);
+			// Fetch should only be called one time (initial failed attempt).
+			expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+			await advanceTime(4);
+			// Fetch should be called the second time.
+			expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+			expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+				"https://www.nonexistentexamplewebsite.com",
+			);
+		});
+	});
+
+	test(`if a fetch call fails for a different reason, log error silently and do not retry`, async () => {
 		let fetchUrlDataSpy = vi
 			.fn()
-			.mockRejectedValueOnce(new Error("Fetch failed with http error code 500"))
+			.mockRejectedValueOnce(new Error("Some other error"))
 			.mockResolvedValue("");
-		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy });
+		const logErrorSpy = vi.fn();
+		const queue = createCallQueue({
+			fetchUrlData: fetchUrlDataSpy,
+			logger: { error: logErrorSpy },
+		});
 
 		queue.add("https://www.nonexistentexamplewebsite.com");
 
@@ -182,17 +217,12 @@ describe("callQueue", () => {
 		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
 			"https://www.nonexistentexamplewebsite.com",
 		);
-		// Wait a bit so the initial fetch request fails.
-		// Wait until just before the retry attempt.
-		await advanceTime(59998);
-		// Fetch should only be called one time (initial failed attempt).
+		await advanceTime(1);
+		expect(logErrorSpy).toHaveBeenCalledOnce();
+		expect(logErrorSpy).toHaveBeenLastCalledWith(new Error("Some other error"));
+		await advanceTime(150000);
+		// Fetch should NOT be called the second time.
 		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-		await advanceTime(4);
-		// Fetch should be called the second time.
-		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
-		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
-			"https://www.nonexistentexamplewebsite.com",
-		);
 	});
 
 	test("if a retried call fails, log the error to stderr", async () => {

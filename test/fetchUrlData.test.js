@@ -15,7 +15,7 @@ afterAll(() => {
 
 describe("fetchUrlData", () => {
 	[400, 401, 404, 451, 500, 502, 511].forEach((errorStatusCode) => {
-		test(`fetchUrlData if a call fails with a http error code (${errorStatusCode}), throw error`, async () => {
+		test(`if a call fails with a http error code (${errorStatusCode}), throw error`, async () => {
 			server.use(
 				http.get("https://www.example.com", () => {
 					return new HttpResponse(null, { status: errorStatusCode });
@@ -28,7 +28,19 @@ describe("fetchUrlData", () => {
 		});
 	});
 
-	test("fetchUrlData should return http response body", async () => {
+	test(`if a call fails with network error, throw error`, async () => {
+		server.use(
+			http.get("https://www.example.com", () => {
+				return HttpResponse.error();
+			}),
+		);
+
+		await expect(() => fetchUrlData("www.example.com")).rejects.toThrowError(
+			"Fetch failed with network error.",
+		);
+	});
+
+	test("should return http response body", async () => {
 		server.use(
 			http.get("https://www.example.com", () => {
 				return HttpResponse.html("<html><head></head><body></body></html>");
