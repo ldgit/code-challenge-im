@@ -1,7 +1,5 @@
 export function createSilentLogger() {
-	return {
-		error() {},
-	};
+	return { error() {} };
 }
 
 export function createVerboseLogger() {
