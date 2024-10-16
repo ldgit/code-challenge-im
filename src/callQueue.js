@@ -1,18 +1,30 @@
-import { fetchUrlData } from "./fetchUrlData.js";
+import { fetchUrlData as fetch } from "./fetchUrlData.js";
 
 /**
- * @param {{ requestDelay: number, retryDelay: number }} options - delay times are in milliseconds.
+ * @param {{ requestDelay: number, retryDelay: number, fetchUrlData: (url: string) => Promise<void> }} options - delay times are in milliseconds.
  * @returns object that handles url call queue.
  */
-export function createCallQueue(
-	{ requestDelay } = { requestDelay: 1000, retryDelay: 60000 },
-) {
+export function createCallQueue(options) {
+	// Override default options with those provided through options argument, if available.
+	const { requestDelay, retryDelay, fetchUrlData } = {
+		requestDelay: 1000,
+		retryDelay: 60000,
+		fetchUrlData: fetch,
+		...options,
+	};
 	const callQueue = new Map();
 	const alreadyCalled = new Map();
 	let requestDelayExpired = true;
 
 	function callAndStartTimer(url) {
-		fetchUrlData(url);
+		fetchUrlData(url).catch(() => {
+			setTimeout(() => {
+				fetchUrlData(url).catch(() => {
+					console.error(`Http request failed for ${url}`);
+				});
+			}, retryDelay);
+		});
+
 		callQueue.delete(url);
 		alreadyCalled.set(url);
 
