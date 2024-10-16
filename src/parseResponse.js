@@ -9,12 +9,10 @@ export function parseResponse(body) {
 	const title = $("head > title").text();
 
 	/**
-	 * Regex used in type=email input per WHATWG.
-	 * @see https://html.spec.whatwg.org/multipage/input.html#email-state-(type=email)
+	 * Used regex from "Find All Email Addresses in a File using Grep" example.
+	 * @see https://emailregex.com/
 	 */
-	const emailRegex =
-		/[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/g;
+	const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b/g;
 	const emailMatches = body.match(emailRegex);
-
 	return { title, email: emailMatches ? emailMatches[0] : "" };
 }

@@ -27,10 +27,10 @@ test(`parseResponse should return first email found in text`, () => {
       <head><title>The Website</title></head>
       <body>
         <ul>
-          <li>first.email@example.hr</li>
-          <li>Two</li>
+					<li>false positive found in testing: 100%}@medi </li>
+					<li class="red"></li>
+					<li>first.email@example.hr</li>
           <li class="blue">second.email@gmail.com third.email+test@gmail.com</li>
-          <li class="red">four</li>
         </ul>
       </body>
       `,
