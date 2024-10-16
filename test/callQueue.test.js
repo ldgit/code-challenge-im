@@ -182,26 +182,8 @@ describe("callQueue", () => {
 		expect(consoleErrorSpy).toHaveBeenLastCalledWith(
 			"Http request failed for https://www.nonexistentexamplewebsite.com",
 		);
+		// Assert fetch not called again.
+		await advanceTime(120001);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
 	});
-
-	test.skip("if a call fails, wait specified amount of time and retry (http failure code)", async () => {
-		// let urlCalled = false;
-		// const queue = createCallQueue({ retryDelay: 60000 });
-		// queue.add("www.nonexistentexamplewebsite.com");
-		// await advanceTime(2);
-		// // We create the website to confirm that the retry call was made.
-		// server.use(
-		// 	http.get("www.nonexistentexamplewebsite.com", () => {
-		// 		urlCalled = true;
-		// 		return HttpResponse.html("<html></html>");
-		// 	}),
-		// );
-		// // Wait until just before the retry attempt.
-		// await advanceTime(59996);
-		// expect(urlCalled).toStrictEqual(false);
-		// await advanceTime(30);
-		// expect(urlCalled).toStrictEqual(true);
-	});
-
-	test.todo("failed call should only retry once", () => {});
 });

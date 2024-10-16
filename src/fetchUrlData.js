@@ -6,5 +6,9 @@ export async function fetchUrlData(url) {
 		url.startsWith("http://") || url.startsWith("https://")
 			? url
 			: `https://${url}`;
-	await fetch(fullUrl, { method: "GET" });
+	const response = await fetch(fullUrl, { method: "GET" });
+
+	if (response.status >= 400 && response.status < 600) {
+		throw new Error();
+	}
 }
