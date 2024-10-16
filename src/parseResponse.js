@@ -14,5 +14,6 @@ export function parseResponse(body) {
 	 */
 	const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b/g;
 	const emailMatches = body.match(emailRegex);
+
 	return { title, email: emailMatches ? emailMatches[0] : "" };
 }
