@@ -6,7 +6,7 @@ import {
 	afterEach,
 	afterAll,
 	vi,
-  beforeEach,
+	beforeEach,
 } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "./mocks/network.js";
@@ -20,23 +20,23 @@ async function advanceTime(milliseconds) {
 }
 
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: "bypass" });
+	server.listen({ onUnhandledRequest: "bypass" });
 });
 beforeEach(() => {
-  vi.useFakeTimers();
+	vi.useFakeTimers();
 });
 afterEach(() => {
-  vi.resetAllMocks();
-  vi.useRealTimers();
+	vi.resetAllMocks();
+	vi.useRealTimers();
 	server.resetHandlers();
 });
 afterAll(() => {
-  server.close()
+	server.close();
 });
 
 describe("callQueue", () => {
 	test("add should immediately make a GET request to the url", async () => {
-		const queue = createCallQueue({ fetchUrlData});
+		const queue = createCallQueue({ fetchUrlData });
 		let urlCalled = false;
 		server.use(
 			http.get("https://www.google.com", () => {
@@ -52,50 +52,64 @@ describe("callQueue", () => {
 	});
 
 	test("add should wait a specified amount of milliseconds before making each new requests", async () => {
-    const fetchUrlDataSpy = vi.fn().mockResolvedValue('');
-		const queue = createCallQueue({ requestDelay: 1000, fetchUrlData: fetchUrlDataSpy });
+		const fetchUrlDataSpy = vi.fn().mockResolvedValue("");
+		const queue = createCallQueue({
+			requestDelay: 1000,
+			fetchUrlData: fetchUrlDataSpy,
+		});
 
 		queue.add("www.google.hr");
 		queue.add("https://second.example.com");
 		queue.add("https://third.example.com");
 
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-    expect(fetchUrlDataSpy).toHaveBeenCalledWith("www.google.hr");
-    
-		await advanceTime(998);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-		await advanceTime(3);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://second.example.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenCalledWith("www.google.hr");
 
 		await advanceTime(998);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
 		await advanceTime(3);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(3);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://third.example.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://second.example.com",
+		);
+
+		await advanceTime(998);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		await advanceTime(3);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(3);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://third.example.com",
+		);
 	});
 
 	test("add should wait a specified amount of milliseconds before making new request (second and third urls added after some part of the delay already passed)", async () => {
-		const fetchUrlDataSpy = vi.fn().mockResolvedValue('');
-    const queue = createCallQueue({ requestDelay: 1000, fetchUrlData: fetchUrlDataSpy });
+		const fetchUrlDataSpy = vi.fn().mockResolvedValue("");
+		const queue = createCallQueue({
+			requestDelay: 1000,
+			fetchUrlData: fetchUrlDataSpy,
+		});
 
 		queue.add("www.google.hr");
 
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("www.google.hr");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("www.google.hr");
 		await advanceTime(700);
 		queue.add("https://second.example.com");
 		queue.add("https://third.example.com");
 		await advanceTime(298);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
 		await advanceTime(3);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://second.example.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://second.example.com",
+		);
 		await advanceTime(998);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
 		await advanceTime(3);
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(3);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://third.example.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(3);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://third.example.com",
+		);
 	});
 
 	test("add should ignore urls that were added previously", async () => {
@@ -119,48 +133,61 @@ describe("callQueue", () => {
 	});
 
 	test("if a call fails, wait specified amount of time and retry (nonexistent website)", async () => {
-    // Mocking fetchUrlData function here because MSW doesn't play nicely with fake timers and long delays.
-    let fetchUrlDataSpy = vi.fn().mockRejectedValueOnce(new Error()).mockResolvedValue('')
-		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy});
+		// Mocking fetchUrlData function here because MSW doesn't play nicely with fake timers and long delays.
+		let fetchUrlDataSpy = vi
+			.fn()
+			.mockRejectedValueOnce(new Error())
+			.mockResolvedValue("");
+		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy });
 
 		queue.add("https://www.nonexistentexamplewebsite.com");
 
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://www.nonexistentexamplewebsite.com");
-    // Wait a bit so the initial fetch request fails.
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://www.nonexistentexamplewebsite.com",
+		);
+		// Wait a bit so the initial fetch request fails.
 		// Wait until just before the retry attempt.
 		await advanceTime(59998);
 		// Fetch should only be called one time (initial failed attempt).
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
 		await advanceTime(4);
 		// Fetch should be called the second time.
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://www.nonexistentexamplewebsite.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://www.nonexistentexamplewebsite.com",
+		);
 	});
 
 	test("if a retried call fails, log the error to stderr", async () => {
-    let fetchUrlDataSpy = vi.fn().mockRejectedValue(new Error());
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy});
+		let fetchUrlDataSpy = vi.fn().mockRejectedValue(new Error());
+		const consoleErrorSpy = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy });
 
 		queue.add("https://www.nonexistentexamplewebsite.com");
 
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://www.nonexistentexamplewebsite.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(1);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://www.nonexistentexamplewebsite.com",
+		);
 		await advanceTime(60001);
 		// Fetch should be called the second time.
-    expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
-    expect(fetchUrlDataSpy).toHaveBeenLastCalledWith("https://www.nonexistentexamplewebsite.com");
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenLastCalledWith("Http request failed for https://www.nonexistentexamplewebsite.com");
+		expect(fetchUrlDataSpy).toHaveBeenCalledTimes(2);
+		expect(fetchUrlDataSpy).toHaveBeenLastCalledWith(
+			"https://www.nonexistentexamplewebsite.com",
+		);
+		expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+		expect(consoleErrorSpy).toHaveBeenLastCalledWith(
+			"Http request failed for https://www.nonexistentexamplewebsite.com",
+		);
 	});
 
 	test.skip("if a call fails, wait specified amount of time and retry (http failure code)", async () => {
 		// let urlCalled = false;
 		// const queue = createCallQueue({ retryDelay: 60000 });
-
 		// queue.add("www.nonexistentexamplewebsite.com");
-
 		// await advanceTime(2);
 		// // We create the website to confirm that the retry call was made.
 		// server.use(

@@ -49,7 +49,7 @@ export function parseUrlFromText(text) {
 	findBracketPairs(textWithoutEscapedBrackets).forEach((bracketPair) => {
 		// Regex taken from https://stackoverflow.com/a/3809435 and modified slightly so the protocol is optional.
 		const urlRegex =
-			/(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+			/(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi;
 		const urlsInBracketPair = textWithoutEscapedBrackets
 			.substring(bracketPair[0], bracketPair[1])
 			.match(urlRegex);
