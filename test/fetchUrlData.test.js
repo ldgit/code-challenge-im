@@ -22,9 +22,9 @@ describe("fetchUrlData", () => {
 				}),
 			);
 
-			await expect(() =>
-				fetchUrlData("www.example.com"),
-			).rejects.toThrowError();
+			await expect(() => fetchUrlData("www.example.com")).rejects.toThrowError(
+				`Fetch failed with http error code ${errorStatusCode}`,
+			);
 		});
 	});
 

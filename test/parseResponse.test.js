@@ -4,7 +4,7 @@ import { parseResponse } from "../src/parseResponse.js";
 test(`parseResponse should return empty object if title and email not found`, () => {
 	expect(parseResponse("<html><head></head><body></body></html>")).toEqual({
 		title: "",
-		emails: [],
+		email: "",
 	});
 });
 
@@ -15,16 +15,16 @@ test(`parseResponse should return title object if title found`, () => {
 		),
 	).toEqual({
 		title: "The Website",
-		emails: [],
+		email: "",
 	});
 });
 
-test(`parseResponse should return all emails found in text`, () => {
+test(`parseResponse should return first email found in text`, () => {
 	expect(
 		parseResponse(
 			`
       <html>
-      <head></head>
+      <head><title>The Website</title></head>
       <body>
         <ul>
           <li>first.email@example.hr</li>
@@ -36,7 +36,7 @@ test(`parseResponse should return all emails found in text`, () => {
       `,
 		),
 	).toEqual({
-		title: "",
-		emails: ['first.email@example.hr', 'second.email@gmail.com', 'third.email+test@gmail.com'],
+		title: "The Website",
+		email: "first.email@example.hr",
 	});
 });

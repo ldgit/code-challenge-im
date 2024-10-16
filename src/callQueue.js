@@ -1,4 +1,6 @@
 import { fetchUrlData as fetch } from "./fetchUrlData.js";
+import { parseResponse } from "./parseResponse.js";
+import { printParsedResponse } from "./printParsedResponse.js";
 
 /**
  * @param {{ requestDelay: number, retryDelay: number, fetchUrlData: (url: string) => Promise<void> }} options - delay times are in milliseconds.
@@ -17,13 +19,17 @@ export function createCallQueue(options) {
 	let requestDelayExpired = true;
 
 	function callAndStartTimer(url) {
-		fetchUrlData(url).catch(() => {
-			setTimeout(() => {
-				fetchUrlData(url).catch(() => {
-					console.error(`Http request failed for ${url}`);
-				});
-			}, retryDelay);
-		});
+		fetchUrlData(url)
+			.then((responseBody) => {
+				printParsedResponse(url, parseResponse(responseBody));
+			})
+			.catch(() => {
+				setTimeout(() => {
+					fetchUrlData(url).catch(() => {
+						console.error(`Http request failed for ${url}`);
+					});
+				}, retryDelay);
+			});
 
 		callQueue.delete(url);
 		alreadyCalled.set(url);

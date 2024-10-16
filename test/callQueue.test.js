@@ -19,18 +19,23 @@ async function advanceTime(milliseconds) {
 	await vi.advanceTimersByTimeAsync(milliseconds);
 }
 
+let consoleLogSpy;
 beforeAll(() => {
+	vi.stubEnv("IM_SECRET", "secret key");
 	server.listen({ onUnhandledRequest: "bypass" });
 });
 beforeEach(() => {
+	consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 	vi.useFakeTimers();
 });
 afterEach(() => {
-	vi.resetAllMocks();
+	vi.clearAllMocks();
 	vi.useRealTimers();
 	server.resetHandlers();
 });
 afterAll(() => {
+	vi.unstubAllEnvs();
+	vi.restoreAllMocks();
 	server.close();
 });
 
@@ -49,6 +54,38 @@ describe("callQueue", () => {
 
 		await nextTick();
 		expect(urlCalled).toStrictEqual(true);
+	});
+
+	[
+		["<html></html>", '{"url":"www.google.com"}', "no title or emails"],
+		[
+			"<html><head><title>A website</title></head></html>",
+			'{"url":"www.google.com","title":"A website"}',
+			"just title",
+		],
+		[
+			"<html><body>email@example.com</body></html>",
+			'{"url":"www.google.com","email":"e4ba0cf0512b11e5eba3e298a0ad3e1d1e60c247ca7b932b8d83f6d6e824d75e"}',
+			"just email",
+		],
+	].forEach(([html, expectedJson, description]) => {
+		test(`add should make a GET request to the url and print out the parsed data (${description})`, async () => {
+			const queue = createCallQueue({ fetchUrlData });
+			let urlCalled = false;
+			server.use(
+				http.get("https://www.google.com", () => {
+					urlCalled = true;
+					return HttpResponse.html(html);
+				}),
+			);
+
+			queue.add("www.google.com");
+
+			await nextTick();
+			expect(urlCalled).toStrictEqual(true);
+			await nextTick();
+			expect(consoleLogSpy).toHaveBeenCalledWith(expectedJson);
+		});
 	});
 
 	test("add should wait a specified amount of milliseconds before making each new requests", async () => {
@@ -133,10 +170,9 @@ describe("callQueue", () => {
 	});
 
 	test("if a call fails, wait specified amount of time and retry (nonexistent website)", async () => {
-		// Mocking fetchUrlData function here because MSW doesn't play nicely with fake timers and long delays.
 		let fetchUrlDataSpy = vi
 			.fn()
-			.mockRejectedValueOnce(new Error())
+			.mockRejectedValueOnce(new Error("Fetch failed with http error code 500"))
 			.mockResolvedValue("");
 		const queue = createCallQueue({ fetchUrlData: fetchUrlDataSpy });
 
@@ -160,7 +196,9 @@ describe("callQueue", () => {
 	});
 
 	test("if a retried call fails, log the error to stderr", async () => {
-		let fetchUrlDataSpy = vi.fn().mockRejectedValue(new Error());
+		let fetchUrlDataSpy = vi
+			.fn()
+			.mockRejectedValue(new Error("Fetch failed with http error code 502"));
 		const consoleErrorSpy = vi
 			.spyOn(console, "error")
 			.mockImplementation(() => {});
