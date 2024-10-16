@@ -8,6 +8,7 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "vitest",
+		"test:integration": "vitest --run --testTimeout 10000 --dir ./test/integration",
 		"coverage": "vitest run --coverage",
 		"lint": "eslint",
 		"style": "prettier . --write"

@@ -1,0 +1,2 @@
+detect all of these: [www.google.com] [www.wikipedia.com]
+should detect last one here: [www.google.com] [www.wikipedia.com] [https://en.wikipedia.org/wiki/Email_address]]
