@@ -19,9 +19,14 @@ A code challenge made for a job application.
 
 This script uses `IM_SECRET` env variable as a secret key for hashing, and will fail without it.
 
-You can ensure it is set for your current session by calling `export IM_SECRET=your_secret_key` **before** running the script.
+You can ensure it is set for your current session by running `export IM_SECRET=your_secret_key` **before** running the script.
 
 There are several ways to run the script:
-- `node ./index ./path/to/file.txt` - parse a txt file
-- `node ./index` - if no file path is provided the script will parse the input from `stdin` line by line
-- `node ./index.js -h` or `./index.js --help` for complete instructions 
+- `node ./index.js ./path/to/file.txt` - parse a txt file
+- `node ./index.js` - if no file path is provided the script will parse the input from `stdin` line by line
+  - `echo "some text with [www.example.com] url" | node ./index.js` - pipe output from another command
+- `node ./index.js -h` or `./index.js --help` for complete instructions
+
+Additional notes:
+- When parsing a txt file, the script will end on its own once the requests to *all* urls (*and* all the queued retries) have been made. In case of a retry this means that it may take more than 60 seconds to script to end.
+- When parsing from `stdin`, press `control + D` or `control + C` to end the script.

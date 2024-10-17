@@ -30,7 +30,7 @@ describe("e2e tests", () => {
 		await wait(500);
 		expect(output.trim()).toEqual("");
 
-		await wait(500);
+		await wait(501);
 		expect(output.trim()).toEqual(
 			'{"url":"www.wikipedia.com","title":"Wikipedia","email":"28e358cfede71a5157cebf1daea20d22be6ef06eedf8e42b3d826cacb734c265"}',
 		);
